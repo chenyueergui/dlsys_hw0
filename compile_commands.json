@@ -1,0 +1,18 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-std=c++11",
+      "-fPIC",
+      "-o",
+      "src/simple_ml_ext.so",
+      "src/simple_ml_ext.cpp"
+    ],
+    "directory": "/home/john/dlsys_hw0",
+    "file": "/home/john/dlsys_hw0/src/simple_ml_ext.cpp",
+    "output": "/home/john/dlsys_hw0/src/simple_ml_ext.so"
+  }
+]

@@ -1,7 +1,8 @@
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
+#include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
@@ -33,6 +34,75 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
      */
 
     /// BEGIN YOUR CODE
+    for (int start = 0; start < m; start += batch) {
+      int batch_size = std::min(batch, m - start);
+      float *Z = new float[batch_size * k]; // Z : shape (m, k)
+      const float *X_batch = X + start * n;
+      const unsigned char *y_batch = y + start;
+
+      // step1, calculate for Z
+
+      for (int i = 0; i < batch_size; i++) {
+        for (int j = 0; j < k; j++) {
+          Z[i * k + j] = 0;
+          for (int a = 0; a < n; a++) {
+            Z[i * k + j] += X_batch[i * n + a] * theta[a * k + j];
+          }
+        }
+      }
+
+      // step2 calculate max number in each row of Z and substract from it
+
+      for (int i = 0; i < batch_size; i++) {
+        float max_number = Z[i * k];
+        for (int j = 0; j < k; j++) {
+          max_number = std::max(max_number, Z[i * k + j]);
+        }
+        for (int j = 0; j < k; j++) {
+          Z[i * k + j] -= max_number;
+        }
+      }
+
+      // step 3 calculate softmax for Z
+
+      for (int i = 0; i < batch_size; i++) {
+        float sum = 0;
+        for (int j = 0; j < k; j++) {
+          sum += std::exp(Z[i * k + j]);
+        }
+        for (int j = 0; j < k; j++) {
+          Z[i * k + j] = std::exp(Z[i * k + j]) / sum;
+        }
+      }
+
+      // step4 calculate the one hot for y
+
+      int *Iy = new int[batch * k];
+
+      for (int i = 0; i < batch_size; i++) {
+        for (int j = 0; j < k; j++) {
+          if (j == y_batch[i])
+            Iy[i * k + j] = 1;
+          else
+            Iy[i * k + j] = 0;
+        }
+      }
+
+      // step5 caculate the grad
+
+      for (int i = 0; i < n; i++) {
+        for (int j = 0; j < k; j++) {
+          float grad = 0;
+          for (int f = 0; f < batch_size; f++) {
+            grad += X_batch[f * n + i] * (Z[f * k + j] - Iy[f * k + j]);
+          }
+          theta[i * k + j] -= lr * grad / batch_size;
+        }
+      }
+
+      delete[] Z;
+      delete[] Iy;
+    }
 
     /// END YOUR CODE
 }
